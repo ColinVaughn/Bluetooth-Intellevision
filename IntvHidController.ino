@@ -232,6 +232,241 @@ struct DebounceState {
 
 DebounceState debounceStates[31];  // One state per button
 
+// Battery configuration
+const uint16_t DEFAULT_BATTERY_CAPACITY = 1000;  // Default 1000mAh
+uint16_t batteryCapacity = DEFAULT_BATTERY_CAPACITY;  // Current battery capacity in mAh
+
+// Power consumption constants (in mA)
+const uint8_t POWER_ACTIVE = 100;    // Active use power consumption
+const uint8_t POWER_IDLE = 50;       // Connected but idle
+const uint8_t POWER_LOW = 30;        // Low power mode
+const uint8_t POWER_ULTRA = 20;      // Ultra-low power mode
+const uint8_t POWER_SLEEP = 1;       // Sleep mode
+
+// Enhanced battery detection settings
+struct BatteryDetection {
+  uint32_t lastVoltage;          // Last measured voltage
+  uint32_t lastCapacity;         // Last detected capacity
+  uint32_t dischargeStartTime;   // When discharge started
+  uint32_t dischargeStartLevel;  // Battery level when discharge started
+  uint32_t samples[10];          // Voltage samples for averaging
+  uint8_t sampleIndex;           // Current sample index
+  bool isDischarging;            // Whether battery is discharging
+  bool isCharging;               // Whether battery is charging
+  uint32_t lastDetectionTime;    // Last capacity detection time
+  
+  // New fields for enhanced detection
+  uint32_t voltageHistory[50];     // Extended voltage history
+  uint8_t voltageIndex;            // Current voltage history index
+  uint32_t dischargeHistory[10];   // History of discharge measurements
+  uint8_t dischargeIndex;          // Current discharge history index
+  uint32_t capacityHistory[5];     // History of capacity measurements
+  uint8_t capacityIndex;           // Current capacity history index
+  float confidence;                // Detection confidence (0-1)
+  uint32_t lastVerificationTime;   // Last capacity verification time
+  bool isVerified;                 // Whether capacity is verified
+};
+
+BatteryDetection batteryDetection;
+
+// Function to initialize battery detection
+void initBatteryDetection() {
+  batteryDetection.lastVoltage = 0;
+  batteryDetection.lastCapacity = 0;
+  batteryDetection.dischargeStartTime = 0;
+  batteryDetection.dischargeStartLevel = 0;
+  batteryDetection.sampleIndex = 0;
+  batteryDetection.isDischarging = false;
+  batteryDetection.isCharging = false;
+  batteryDetection.lastDetectionTime = 0;
+  
+  // Initialize samples array
+  for (uint8_t i = 0; i < 10; i++) {
+    batteryDetection.samples[i] = 0;
+  }
+}
+
+// Function to get average voltage
+uint32_t getAverageVoltage() {
+  uint32_t sum = 0;
+  for (uint8_t i = 0; i < 10; i++) {
+    sum += batteryDetection.samples[i];
+  }
+  return sum / 10;
+}
+
+// Function to calculate voltage trend
+float calculateVoltageTrend() {
+  float sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+  uint8_t n = 50;
+  
+  for (uint8_t i = 0; i < n; i++) {
+    float x = i;
+    float y = batteryDetection.voltageHistory[i];
+    sumX += x;
+    sumY += y;
+    sumXY += x * y;
+    sumX2 += x * x;
+  }
+  
+  return (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+}
+
+// Function to detect battery chemistry
+uint8_t detectBatteryChemistry() {
+  float voltageTrend = calculateVoltageTrend();
+  uint32_t avgVoltage = getAverageVoltage();
+  
+  // LiPo: 3.7V nominal, steep discharge curve
+  if (avgVoltage > 3700 && voltageTrend < -0.5) return 1;
+  
+  // LiFePO4: 3.2V nominal, flat discharge curve
+  if (avgVoltage > 3200 && abs(voltageTrend) < 0.1) return 2;
+  
+  // NiMH: 1.2V nominal, gradual discharge curve
+  if (avgVoltage > 1200 && voltageTrend > -0.2) return 3;
+  
+  return 0; // Unknown
+}
+
+// Function to verify capacity measurement
+bool verifyCapacity(uint32_t capacity) {
+  // Check if we have enough history
+  if (batteryDetection.capacityIndex < 5) return false;
+  
+  // Calculate average and standard deviation
+  uint32_t sum = 0;
+  uint32_t sumSq = 0;
+  for (uint8_t i = 0; i < 5; i++) {
+    sum += batteryDetection.capacityHistory[i];
+    sumSq += batteryDetection.capacityHistory[i] * batteryDetection.capacityHistory[i];
+  }
+  
+  float avg = sum / 5.0;
+  float variance = (sumSq / 5.0) - (avg * avg);
+  float stdDev = sqrt(variance);
+  
+  // Calculate confidence based on standard deviation
+  float confidence = 1.0 - (stdDev / avg);
+  batteryDetection.confidence = confidence;
+  
+  // Consider verified if confidence is high enough
+  return confidence > 0.9;
+}
+
+// Function to detect battery capacity with enhanced algorithms
+void detectBatteryCapacity() {
+  uint32_t currentTime = millis();
+  uint8_t currentLevel = readBatteryLevel();
+  uint32_t currentVoltage = analogRead(BATTERY_PIN);
+  
+  // Update voltage history
+  batteryDetection.voltageHistory[batteryDetection.voltageIndex] = currentVoltage;
+  batteryDetection.voltageIndex = (batteryDetection.voltageIndex + 1) % 50;
+  
+  // Detect charging state with enhanced algorithm
+  bool wasCharging = batteryDetection.isCharging;
+  float voltageTrend = calculateVoltageTrend();
+  batteryDetection.isCharging = (voltageTrend > 0.1 || currentVoltage > batteryDetection.lastVoltage + 50);
+  
+  // If charging started, reset discharge tracking
+  if (batteryDetection.isCharging && !wasCharging) {
+    batteryDetection.isDischarging = false;
+    batteryDetection.dischargeStartTime = 0;
+    batteryDetection.dischargeStartLevel = 0;
+  }
+  
+  // Enhanced discharge detection
+  if (!batteryDetection.isCharging && currentLevel < batteryDetection.dischargeStartLevel) {
+    if (!batteryDetection.isDischarging) {
+      batteryDetection.isDischarging = true;
+      batteryDetection.dischargeStartTime = currentTime;
+      batteryDetection.dischargeStartLevel = currentLevel;
+    } else {
+      // Calculate capacity based on discharge rate with enhanced algorithm
+      uint32_t timeDiff = currentTime - batteryDetection.dischargeStartTime;
+      uint8_t levelDiff = batteryDetection.dischargeStartLevel - currentLevel;
+      
+      if (levelDiff >= 5 && timeDiff >= 300000) { // At least 5% drop over 5 minutes
+        // Calculate current power consumption with battery chemistry consideration
+        uint8_t currentPower;
+        if (isSleeping) {
+          currentPower = POWER_SLEEP;
+        } else if (currentPowerLevel == 2) {
+          currentPower = POWER_ULTRA;
+        } else if (currentPowerLevel == 1) {
+          currentPower = POWER_LOW;
+        } else if (bleGamepad.isConnected()) {
+          currentPower = POWER_IDLE;
+        } else {
+          currentPower = POWER_ACTIVE;
+        }
+        
+        // Adjust power consumption based on battery chemistry
+        uint8_t chemistry = detectBatteryChemistry();
+        float efficiencyFactor = 1.0;
+        switch (chemistry) {
+          case 1: // LiPo
+            efficiencyFactor = 0.95;
+            break;
+          case 2: // LiFePO4
+            efficiencyFactor = 0.98;
+            break;
+          case 3: // NiMH
+            efficiencyFactor = 0.90;
+            break;
+        }
+        
+        // Calculate capacity with efficiency factor
+        uint32_t detectedCapacity = (currentPower * timeDiff * 100 * efficiencyFactor) / (levelDiff * 3600000);
+        
+        // Store in history
+        batteryDetection.capacityHistory[batteryDetection.capacityIndex] = detectedCapacity;
+        batteryDetection.capacityIndex = (batteryDetection.capacityIndex + 1) % 5;
+        
+        // Verify capacity if we have enough history
+        bool isVerified = verifyCapacity(detectedCapacity);
+        
+        // Only update if verified or significantly different
+        if (isVerified || abs((int32_t)detectedCapacity - (int32_t)batteryDetection.lastCapacity) > 100) {
+          batteryDetection.lastCapacity = detectedCapacity;
+          batteryDetection.isVerified = isVerified;
+          setBatteryCapacity(detectedCapacity);
+          
+          // Log the detection with enhanced information
+          char buffer[200];
+          snprintf(buffer, sizeof(buffer), 
+            "Detected battery capacity: %dmAh (Voltage: %dmV, Level: %d%%, Chemistry: %d, Confidence: %.2f, Verified: %s)",
+            detectedCapacity,
+            (currentVoltage * 3300) / 4095,
+            currentLevel,
+            chemistry,
+            batteryDetection.confidence,
+            isVerified ? "Yes" : "No"
+          );
+          Serial.println(buffer);
+        }
+        
+        // Reset discharge tracking
+        batteryDetection.isDischarging = false;
+        batteryDetection.dischargeStartTime = 0;
+        batteryDetection.dischargeStartLevel = 0;
+      }
+    }
+  }
+  
+  batteryDetection.lastVoltage = currentVoltage;
+  batteryDetection.lastDetectionTime = currentTime;
+  
+  // Periodic capacity verification
+  if (currentTime - batteryDetection.lastVerificationTime >= 3600000) { // Every hour
+    if (verifyCapacity(batteryDetection.lastCapacity)) {
+      batteryDetection.isVerified = true;
+      batteryDetection.lastVerificationTime = currentTime;
+    }
+  }
+}
+
 // Function to adjust input sensitivity
 void adjustSensitivity(uint8_t deadzone, uint8_t sensitivity, uint8_t responseCurve) {
   sensitivitySettings.deadzone = deadzone;
@@ -861,6 +1096,69 @@ void loadInputSettings() {
   preferences.end();
 }
 
+// Function to set battery capacity
+void setBatteryCapacity(uint16_t capacity) {
+  batteryCapacity = capacity;
+  
+  // Save capacity to preferences
+  preferences.begin("intvctrl", false);
+  preferences.putUShort("battCap", capacity);
+  preferences.end();
+}
+
+// Function to load battery capacity
+void loadBatteryCapacity() {
+  preferences.begin("intvctrl", true);
+  batteryCapacity = preferences.getUShort("battCap", DEFAULT_BATTERY_CAPACITY);
+  preferences.end();
+}
+
+// Function to calculate remaining battery time
+uint32_t calculateBatteryTime() {
+  uint8_t currentPower;
+  
+  // Determine current power consumption
+  if (isSleeping) {
+    currentPower = POWER_SLEEP;
+  } else if (currentPowerLevel == 2) {
+    currentPower = POWER_ULTRA;
+  } else if (currentPowerLevel == 1) {
+    currentPower = POWER_LOW;
+  } else if (bleGamepad.isConnected()) {
+    currentPower = POWER_IDLE;
+  } else {
+    currentPower = POWER_ACTIVE;
+  }
+  
+  // Calculate remaining time in hours
+  // Convert mAh to hours by dividing by current power consumption
+  return (batteryCapacity * readBatteryLevel() / 100) / currentPower;
+}
+
+// Function to get power consumption estimate
+void getPowerConsumptionEstimate(char* buffer, size_t size) {
+  uint32_t activeTime = (batteryCapacity * 100) / POWER_ACTIVE;
+  uint32_t idleTime = (batteryCapacity * 100) / POWER_IDLE;
+  uint32_t lowTime = (batteryCapacity * 100) / POWER_LOW;
+  uint32_t ultraTime = (batteryCapacity * 100) / POWER_ULTRA;
+  uint32_t sleepTime = (batteryCapacity * 100) / POWER_SLEEP;
+  
+  snprintf(buffer, size, 
+    "Battery: %dmAh\n"
+    "Active: %d hours\n"
+    "Idle: %d hours\n"
+    "Low Power: %d hours\n"
+    "Ultra-Low: %d hours\n"
+    "Sleep: %d hours",
+    batteryCapacity,
+    activeTime,
+    idleTime,
+    lowTime,
+    ultraTime,
+    sleepTime
+  );
+}
+
 // the setup function runs once when you press reset or power the board
 void setup()
 {
@@ -940,6 +1238,12 @@ void setup()
   bleGamepad.setBatteryLevel(100);
   
   Serial.println("BLE Gamepad started!");
+
+  // Load battery capacity
+  loadBatteryCapacity();
+
+  // Initialize battery detection
+  initBatteryDetection();
 }
 
 
@@ -972,12 +1276,19 @@ void loop()
   if (millis() - lastBatteryCheck >= (BATTERY_CHECK_INTERVAL * 1000)) {
     uint8_t batteryLevel = readBatteryLevel();
     bleGamepad.setBatteryLevel(batteryLevel);
-    lastBatteryCheck = millis();
+    
+    // Run battery capacity detection
+    detectBatteryCapacity();
+    
+    // Calculate and store remaining time
+    uint32_t remainingTime = calculateBatteryTime();
     
     // Enter sleep mode if battery is critically low
     if (batteryLevel < 10) {
       enterSleepMode();
     }
+    
+    lastBatteryCheck = millis();
   }
 
   // Update calibration if active

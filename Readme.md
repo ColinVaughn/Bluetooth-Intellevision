@@ -230,92 +230,56 @@ The controller supports automatic calibration of all inputs to ensure accurate b
 
 ## Power Management
 
-The controller includes several power-saving features:
+The controller includes several power-saving features and supports different battery capacities:
 
-1. **Adaptive Power Levels**:
-   - Three power save levels that automatically adjust based on battery level:
-     - Normal (100% - 60% battery): Full performance
-     - Low Power (60% - 40% battery): Reduced polling rate, dimmer LED
-     - Ultra-Low Power (40% - 20% battery): Minimal polling, very dim LED
-   - Each level has different:
-     - Sleep timeouts (5min, 3min, 1min)
-     - LED brightness levels
-     - Polling intervals
-     - Battery thresholds
+1. **Battery Configuration**:
+   - Default capacity: 1000mAh
+   - Configurable for different batteries
+   - Supports up to 5000mAh
+   - Accurate power consumption tracking
+   - Automatic capacity detection
 
-2. **Charging Detection**:
-   - Automatically detects when the controller is charging
-   - Returns to normal power level while charging
-   - Wakes up from sleep mode when charging starts
-   - Maintains full performance during charging
+2. **Power Consumption Levels**:
+   - Active use: ~100mA
+   - Connected but idle: ~50mA
+   - Low power mode: ~30mA
+   - Ultra-low power mode: ~20mA
+   - Sleep mode: < 1mA
 
-3. **Enhanced Sleep Mode**:
-   - Controller enters sleep mode after configurable timeout based on power level
-   - Saves current profile and settings before sleeping
-   - Multiple wake sources:
-     - Any button press
-     - Battery level change
-     - Charging detection
-   - Press any button to wake up
-   - Sleep mode can be disabled by setting IDLE_TIMEOUT to 0
+3. **Battery Life Estimates** (for 2500mAh battery):
+   - Active use: ~25 hours
+   - Connected idle: ~50 hours
+   - Low power mode: ~83 hours
+   - Ultra-low power mode: ~125 hours
+   - Sleep mode: ~2500 hours
 
-4. **Battery Monitoring**:
-   - Battery level is reported to the connected device
-   - Controller enters sleep mode when battery is critically low (< 10%)
-   - Battery level is checked every 60 seconds
-   - Adaptive power levels based on battery percentage
+4. **Power Management Features**:
+   - Automatic power level adjustment
+   - Battery capacity configuration
+   - Remaining time calculation
+   - Power consumption monitoring
+   - Low battery protection
 
-5. **Status Indicators**:
-   The built-in LED provides detailed status information through various patterns:
+5. **Configuration Options**:
+   - Set battery capacity
+   - Adjust power thresholds
+   - Configure sleep timeouts
+   - Enable/disable features
+   - Save power settings
 
-   - **Connection Status**:
-     - Slow blink (1s on, 1s off): Searching for connection
-     - Solid on: Connected and ready
-     - Off: Sleep mode
+6. **Status Information**:
+   - Current power mode
+   - Battery percentage
+   - Remaining time
+   - Power consumption
+   - Charging status
 
-   - **Power Status**:
-     - Dimmed: Low power mode
-     - Very dim: Ultra-low power mode
-     - Breathing effect: Charging
-     - Double blink: Low battery warning (< 10%)
-
-   - **Operation Status**:
-     - Quick triple blink: Macro execution
-     - Number of blinks = profile number + 1: Profile switch
-     - Fast blink (100ms): Error condition
-
-   - **Error Indications**:
-     - Fast blink: General error
-     - Double blink: Low battery
-     - No light: Sleep mode or power off
-
-   - **Brightness Levels**:
-     - Full brightness: Normal power mode
-     - Half brightness: Low power mode
-     - Quarter brightness: Ultra-low power mode
-
-6. **Troubleshooting Guide**:
-   Use the LED patterns to diagnose issues:
-
-   - **Connection Problems**:
-     - If LED is blinking slowly: Controller is searching for a device
-     - If LED is off: Controller is in sleep mode
-     - If LED is solid: Controller is connected
-
-   - **Battery Issues**:
-     - If LED shows double blink: Battery is critically low
-     - If LED is very dim: Battery is low, power saving mode active
-     - If LED shows breathing effect: Controller is charging
-
-   - **Operation Issues**:
-     - If LED shows triple blink: Macro is executing
-     - If LED blinks multiple times: Profile is switching
-     - If LED blinks rapidly: Error has occurred
-
-   - **Power Management**:
-     - If LED is dimming: Entering power save mode
-     - If LED brightness changes: Power level has changed
-     - If LED turns off: Entering sleep mode
+7. **Power Saving Tips**:
+   - Use appropriate power mode
+   - Enable sleep when idle
+   - Monitor battery level
+   - Configure timeouts
+   - Use power-efficient settings
 
 ## Button Mapping
 
@@ -406,3 +370,112 @@ With a 1000mAh battery, you can expect:
    - Performance monitoring
    - Debug information
    - Reset options
+
+### Battery Management
+
+1. **Automatic Capacity Detection**:
+   - Automatically detects battery capacity
+   - Monitors discharge rate and voltage
+   - Calculates capacity based on usage patterns
+   - Updates capacity estimates over time
+   - No manual configuration needed
+
+2. **Detection Process**:
+   - Monitors voltage changes
+   - Tracks discharge rates
+   - Measures power consumption
+   - Calculates capacity from usage
+   - Verifies accuracy over time
+
+3. **Detection Features**:
+   - Voltage sampling and averaging
+   - Discharge rate monitoring
+   - Charging state detection
+   - Power consumption tracking
+   - Capacity verification
+
+4. **Accuracy Improvements**:
+   - Multiple measurement points
+   - Voltage averaging
+   - Discharge rate analysis
+   - Power consumption tracking
+   - Continuous refinement
+
+5. **Detection Conditions**:
+   - Minimum 5% battery drop
+   - At least 5 minutes of discharge
+   - Stable power consumption
+   - No charging during measurement
+   - Significant capacity change
+
+6. **Status Information**:
+   - Detected capacity
+   - Current voltage
+   - Battery level
+   - Discharge rate
+   - Power consumption
+
+7. **Usage Notes**:
+   - First detection may take time
+   - Accuracy improves with use
+   - Works with any battery size
+   - Updates automatically
+   - No user intervention needed
+
+### Advanced Battery Detection
+
+1. **Enhanced Detection Algorithms**:
+   - Linear regression for voltage trends
+   - Battery chemistry detection
+   - Efficiency factor calculation
+   - Extended voltage history
+   - Discharge rate analysis
+
+2. **Battery Chemistry Detection**:
+   - LiPo (3.7V nominal)
+   - LiFePO4 (3.2V nominal)
+   - NiMH (1.2V nominal)
+   - Chemistry-specific efficiency
+   - Automatic adaptation
+
+3. **Capacity Verification**:
+   - Statistical analysis
+   - Confidence calculation
+   - Standard deviation tracking
+   - Multiple measurement points
+   - Periodic verification
+
+4. **Detection Accuracy**:
+   - Voltage trend analysis
+   - Chemistry-specific factors
+   - Efficiency compensation
+   - Confidence scoring
+   - Verification thresholds
+
+5. **Verification Process**:
+   - Minimum 5 measurements
+   - Standard deviation analysis
+   - Confidence threshold (90%)
+   - Hourly verification
+   - Continuous refinement
+
+6. **Chemistry-Specific Features**:
+   - LiPo: 95% efficiency
+   - LiFePO4: 98% efficiency
+   - NiMH: 90% efficiency
+   - Custom discharge curves
+   - Voltage characteristics
+
+7. **Advanced Monitoring**:
+   - 50-point voltage history
+   - 10-point discharge history
+   - 5-point capacity history
+   - Trend analysis
+   - Pattern recognition
+
+8. **Status Information**:
+   - Detected chemistry
+   - Confidence level
+   - Verification status
+   - Efficiency factor
+   - Historical data
