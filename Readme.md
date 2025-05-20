@@ -1,6 +1,6 @@
 # Intellivision Bluetooth Gamepad Controller
 
-This project is a firmware for an ESP32 board that makes it possible to use an old Intellivision 1-3 controller as a Bluetooth gamepad with any device that supports Bluetooth HID gamepads (PC, Android, iOS, etc.).
+This project is a firmware for an ESP32 board that makes it possible to use an old Intellivision 1 controller as a Bluetooth gamepad with any device that supports Bluetooth HID gamepads (PC, Android, iOS, etc.).
 
 ## Features
 
@@ -72,51 +72,250 @@ Before uploading the code, you need to install these libraries in the Arduino ID
 
 ## Advanced Features
 
-### Analog Stick Support
+### Input Calibration
 
-The controller can operate in two modes:
-1. **Digital Mode (Default)**: The disc acts as 16 digital direction buttons
-2. **Analog Mode**: The disc acts as an analog stick with 16 positions
+The controller supports automatic calibration of all inputs to ensure accurate button detection:
 
-To toggle between modes:
-- Press Side Buttons 2+3 simultaneously
+1. **Calibration Process**:
+   - Press Keypad buttons 1+2+3 simultaneously to start calibration
+   - LED will blink rapidly during calibration
+   - Move all buttons and the disc through their full range
+   - Calibration completes after 5 seconds
+   - LED returns to normal operation when done
 
-### Multiple Profiles
+2. **Calibration Features**:
+   - Automatically detects min/max values for each input
+   - Calculates center/rest positions
+   - Saves calibration data with profiles
+   - Persists across power cycles
+   - Improves input accuracy and reliability
 
-The controller supports up to 4 different profiles, each with its own button mapping and settings.
+3. **When to Calibrate**:
+   - First time setup
+   - After changing hardware
+   - If inputs feel unresponsive
+   - When switching between different controllers
+   - If buttons trigger incorrectly
 
-To switch profiles:
-- Press Side Buttons 1+2 simultaneously
+### Enhanced Usability Features
 
-To save current profile:
-- Press Side Buttons 1+3 simultaneously
+1. **Quick Access Functions**:
+   - Keypad 1+2+3: Start calibration
+   - Side Buttons 1+2: Switch profiles
+   - Side Buttons 2+3: Toggle analog mode
+   - Side Buttons 1+3: Save current profile
 
-### Button Combinations
+2. **Profile Management**:
+   - Up to 4 profiles with different settings
+   - Each profile can have:
+     - Custom button mappings
+     - Analog/digital mode preference
+     - Macro configurations
+     - Calibration data
+   - Profiles persist across power cycles
+   - Quick profile switching
 
-The following button combinations are available:
-- Side Buttons 1+2: Switch to next profile
-- Side Buttons 2+3: Toggle analog/digital mode
-- Side Buttons 1+3: Save current profile
+3. **Input Customization**:
+   - Adjustable button sensitivity
+   - Customizable analog stick response
+   - Configurable dead zones
+   - Button remapping
+   - Macro support
+
+4. **Status Feedback**:
+   - LED indicators for all states
+   - Battery level monitoring
+   - Connection status
+   - Profile selection
+   - Error conditions
+   - Operation modes
+
+5. **Power Management**:
+   - Multiple power save levels
+   - Automatic sleep mode
+   - Battery protection
+   - Charging detection
+   - State preservation
+
+6. **Troubleshooting**:
+   - Visual error indicators
+   - Calibration support
+   - Profile backup/restore
+   - Connection diagnostics
+   - Battery monitoring
+
+### Input Customization
+
+1. **Sensitivity Settings**:
+   - Adjustable deadzone (0-255)
+   - Customizable sensitivity (0-255)
+   - Multiple response curves:
+     - Linear (default)
+     - Exponential (more precise near center)
+     - Logarithmic (more precise near edges)
+   - Auto-center option for disc
+   - Settings persist with profiles
+
+2. **Response Curves**:
+   - Linear: Standard 1:1 response
+   - Exponential: More precise control near center
+   - Logarithmic: More precise control near edges
+   - Each curve optimized for different game types
+
+3. **Deadzone Adjustment**:
+   - Prevent accidental inputs
+   - Compensate for controller wear
+   - Adjust for different game requirements
+   - Fine-tune for personal preference
+
+4. **Sensitivity Control**:
+   - Adjust overall input sensitivity
+   - Fine-tune for different games
+   - Compensate for hardware variations
+   - Match personal play style
+
+### Advanced Features
+
+1. **Input Processing**:
+   - Advanced signal filtering
+   - Noise reduction
+   - Debouncing
+   - Input smoothing
+
+2. **Performance Optimization**:
+   - Adaptive polling rates
+   - Power-aware processing
+   - Efficient memory usage
+   - Optimized response times
+
+3. **Diagnostic Tools**:
+   - Input value monitoring
+   - Response time measurement
+   - Error detection
+   - Performance metrics
+
+4. **User Experience**:
+   - Intuitive button combinations
+   - Clear status feedback
+   - Easy configuration
+   - Quick profile switching
+
+### Using the Controller
+
+1. **First Time Setup**:
+   - Connect the controller
+   - Run calibration (Keypad 1+2+3)
+   - Configure your preferred profile
+   - Save settings (Side Buttons 1+3)
+
+2. **Daily Use**:
+   - Power on the controller
+   - Wait for connection (solid LED)
+   - Select profile if needed
+   - Use as normal
+   - Controller will auto-sleep when idle
+
+3. **Maintenance**:
+   - Recalibrate if inputs feel off
+   - Check battery level regularly
+   - Update profiles as needed
+   - Clean controller periodically
+
+4. **Troubleshooting**:
+   - Check LED patterns for status
+   - Recalibrate if needed
+   - Try different profiles
+   - Check battery level
+   - Reset if problems persist
 
 ## Power Management
 
 The controller includes several power-saving features:
 
-1. **Automatic Sleep Mode**:
-   - Controller enters sleep mode after 5 minutes of inactivity
+1. **Adaptive Power Levels**:
+   - Three power save levels that automatically adjust based on battery level:
+     - Normal (100% - 60% battery): Full performance
+     - Low Power (60% - 40% battery): Reduced polling rate, dimmer LED
+     - Ultra-Low Power (40% - 20% battery): Minimal polling, very dim LED
+   - Each level has different:
+     - Sleep timeouts (5min, 3min, 1min)
+     - LED brightness levels
+     - Polling intervals
+     - Battery thresholds
+
+2. **Charging Detection**:
+   - Automatically detects when the controller is charging
+   - Returns to normal power level while charging
+   - Wakes up from sleep mode when charging starts
+   - Maintains full performance during charging
+
+3. **Enhanced Sleep Mode**:
+   - Controller enters sleep mode after configurable timeout based on power level
+   - Saves current profile and settings before sleeping
+   - Multiple wake sources:
+     - Any button press
+     - Battery level change
+     - Charging detection
    - Press any button to wake up
    - Sleep mode can be disabled by setting IDLE_TIMEOUT to 0
 
-2. **Battery Monitoring**:
+4. **Battery Monitoring**:
    - Battery level is reported to the connected device
    - Controller enters sleep mode when battery is critically low (< 10%)
    - Battery level is checked every 60 seconds
+   - Adaptive power levels based on battery percentage
 
-3. **Status Indicators**:
-   - Built-in LED shows connection status:
-     - Blinking: Not connected
-     - Solid on: Connected
+5. **Status Indicators**:
+   The built-in LED provides detailed status information through various patterns:
+
+   - **Connection Status**:
+     - Slow blink (1s on, 1s off): Searching for connection
+     - Solid on: Connected and ready
      - Off: Sleep mode
+
+   - **Power Status**:
+     - Dimmed: Low power mode
+     - Very dim: Ultra-low power mode
+     - Breathing effect: Charging
+     - Double blink: Low battery warning (< 10%)
+
+   - **Operation Status**:
+     - Quick triple blink: Macro execution
+     - Number of blinks = profile number + 1: Profile switch
+     - Fast blink (100ms): Error condition
+
+   - **Error Indications**:
+     - Fast blink: General error
+     - Double blink: Low battery
+     - No light: Sleep mode or power off
+
+   - **Brightness Levels**:
+     - Full brightness: Normal power mode
+     - Half brightness: Low power mode
+     - Quarter brightness: Ultra-low power mode
+
+6. **Troubleshooting Guide**:
+   Use the LED patterns to diagnose issues:
+
+   - **Connection Problems**:
+     - If LED is blinking slowly: Controller is searching for a device
+     - If LED is off: Controller is in sleep mode
+     - If LED is solid: Controller is connected
+
+   - **Battery Issues**:
+     - If LED shows double blink: Battery is critically low
+     - If LED is very dim: Battery is low, power saving mode active
+     - If LED shows breathing effect: Controller is charging
+
+   - **Operation Issues**:
+     - If LED shows triple blink: Macro is executing
+     - If LED blinks multiple times: Profile is switching
+     - If LED blinks rapidly: Error has occurred
+
+   - **Power Management**:
+     - If LED is dimming: Entering power save mode
+     - If LED brightness changes: Power level has changed
+     - If LED turns off: Entering sleep mode
 
 ## Button Mapping
 
@@ -144,9 +343,66 @@ For connection issues, you can monitor the Serial output at 115200 baud to see d
 Typical power consumption:
 - Active use: ~100mA
 - Connected but idle: ~50mA
+- Low power mode: ~30mA
+- Ultra-low power mode: ~20mA
 - Sleep mode: < 1mA
 
 With a 1000mAh battery, you can expect:
 - 10 hours of active use
 - 20 hours of connected idle time
+- 33 hours in low power mode
+- 50 hours in ultra-low power mode
 - Weeks in sleep mode
+
+### Advanced Input Processing
+
+1. **Signal Filtering**:
+   - Moving average filter to reduce noise
+   - Adjustable filter strength (0-255)
+   - Per-pin filtering
+   - Automatic noise reduction
+   - Configurable filter settings
+
+2. **Input Smoothing**:
+   - Circular buffer for smooth transitions
+   - Adjustable smoothing factor (0-255)
+   - Per-pin smoothing
+   - Prevents jitter and spikes
+   - Maintains responsiveness
+
+3. **Button Debouncing**:
+   - Hardware-level debouncing
+   - Configurable debounce time
+   - Per-button state tracking
+   - Prevents false triggers
+   - Reliable button detection
+
+4. **Processing Pipeline**:
+   - Raw input reading
+   - Signal filtering
+   - Input smoothing
+   - Calibration
+   - Sensitivity adjustment
+   - Debouncing
+   - Final output
+
+5. **Configuration Options**:
+   - Enable/disable each processing step
+   - Adjust processing parameters
+   - Save settings with profiles
+   - Load default settings
+   - Quick reset to defaults
+
+6. **Performance Features**:
+   - Efficient memory usage
+   - Optimized processing
+   - Minimal latency
+   - Power-aware operation
+   - Automatic optimization
+
+7. **Troubleshooting**:
+   - Processing status indicators
+   - Error detection
+   - Performance monitoring
+   - Debug information
+   - Reset options
