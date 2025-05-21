@@ -1,6 +1,6 @@
 # Intellivision Bluetooth Gamepad Controller
 
-This project is a firmware for an ESP32 board that makes it possible to use an old Intellivision 1 controller as a Bluetooth gamepad with any device that supports Bluetooth HID gamepads (PC, Android, iOS, etc.).
+This project is a firmware for an ESP32 board that makes it possible to use an old Intellivision controllers as a Bluetooth gamepad with any device that supports Bluetooth HID gamepads (PC, Android, iOS, etc.).
 
 ## Features
 
