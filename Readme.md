@@ -18,6 +18,80 @@ This project is a firmware for an ESP32 board that makes it possible to use any 
 - Multiple controller profiles
 - Button combinations for special functions
 
+## Console Dongle
+
+The console dongle allows you to use the Bluetooth controller with original Intellivision consoles. It acts as a bridge between the Bluetooth controller and the console's controller port.
+
+### Dongle Features
+
+- Seamless connection to original Intellivision consoles
+- Automatic power management
+- Input debouncing and filtering
+- Error recovery and automatic reconnection
+- Status LED indicators
+- Support for all original controller functions
+- Low power mode when idle
+- Sleep mode for extended battery life
+
+### Hardware Requirements
+
+1. An ESP32 development board (like ESP32 DevKit, NodeMCU-32S, etc.)
+2. Original Intellivision controller port connector
+3. Some jumper wires for connections
+4. (Optional) A LiPo battery and charging circuit for portable use
+
+### Wiring the Dongle
+
+Connect the ESP32 to the controller port as follows:
+- Brown wire (Ground) -> ESP32 GND
+- Pin 1 -> ESP32 GPIO 5
+- Pin 2 -> ESP32 GPIO 4
+- Pin 3 -> ESP32 GPIO 3
+- Pin 4 -> ESP32 GPIO 2
+- Pin 6 -> ESP32 GPIO 9
+- Pin 7 -> ESP32 GPIO 8
+- Pin 8 -> ESP32 GPIO 7
+- Pin 9 -> ESP32 GPIO 6
+
+### Using the Dongle
+
+1. Flash the dongle firmware to your ESP32
+2. Connect the dongle to the console's controller port
+3. Power on the dongle
+4. The dongle will start advertising as "Intellivision Dongle"
+5. Pair your Bluetooth controller with the dongle
+6. The controller will now work with your original console
+
+### LED Status Indicators
+
+The dongle uses the built-in LED to show its current status:
+- Slow blink: Disconnected
+- Solid on: Connected
+- Fast blink: Error
+- Double blink: Pairing mode
+- Triple blink: Low power mode
+- Very slow blink: Sleep mode
+
+### Power Management
+
+The dongle includes several power-saving features:
+- Normal mode: Full functionality
+- Low power mode: Activated after 1 minute of inactivity
+- Sleep mode: Activated after 5 minutes of inactivity
+- Automatic wake-up when controller connects
+
+### Troubleshooting
+
+If the dongle doesn't work:
+1. Check all wire connections
+2. Verify the ESP32 is powered properly
+3. Check the LED pattern for error indication
+4. Try resetting the ESP32
+5. Ensure the controller is properly paired
+6. Check the console's controller port for damage
+
+For connection issues, you can monitor the Serial output at 115200 baud to see debug messages.
+
 ## The hardware
 
 The hardware is very simple. You just need:
@@ -483,4 +557,3 @@ With a 1000mAh battery, you can expect:
    - Verification status
    - Efficiency factor
    - Historical data
-
