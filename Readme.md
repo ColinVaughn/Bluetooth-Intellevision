@@ -2,7 +2,9 @@
 
 This project is a firmware for an ESP32 board that makes it possible to use any original Intellivision controller as a Bluetooth gamepad with any device that supports Bluetooth HID gamepads (PC, Android, iOS, etc.). It is primarily intended for use with Intellivision emulators.
 
-*Note: I'm currently working on a console dongle project that will allow you to use this Bluetooth controller on the actual console and not just an emulator. It will support all INTV consoles, but the INTV2 works best as it has controller ports. For INTV1 and INTV3, you will need to either cut out controllers or use 8BitWidgets IntelliPort.*
+*Note: I'm currently working on a console dongle project that will allow you to use this Bluetooth controller on the actual console and not just an emulator. It will support all INTV consoles, but the INTV2 works best as it has controller ports. For INTV1 and INTV2, you will need to either cut out controllers or use 8BitWidgets IntelliPort.*
+
+[![Join our Discord](https://img.shields.io/discord/1234567890?color=7289DA&label=Discord&logo=discord&logoColor=white)](https://discord.gg/wwHNq5ddGt)
 
 ## Features
 
@@ -481,3 +483,4 @@ With a 1000mAh battery, you can expect:
    - Verification status
    - Efficiency factor
    - Historical data
+
